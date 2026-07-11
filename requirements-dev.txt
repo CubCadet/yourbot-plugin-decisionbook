@@ -1,7 +1,7 @@
 -r requirements.txt
 
 bandit>=1.9,<2
-basedpyright>=1.39,<2
+basedpyright>=1.39.9,<2
 pip-audit>=2.10,<3
 pytest>=9,<10
 pytest-cov>=7,<8
