@@ -56,7 +56,7 @@ jobs:
         run: python tools/run_audit.py
 
       - name: Upload validated marketplace bundle
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: decisionbook-marketplace-bundle
           path: dist/*.zip
