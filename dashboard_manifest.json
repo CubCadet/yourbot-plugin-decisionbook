@@ -1,0 +1,53 @@
+{
+  "pages": [
+    {
+      "id": "overview",
+      "title": "DecisionBook Overview",
+      "widgets": [
+        {
+          "id": "onboarding",
+          "type": "markdown",
+          "title": "Quick start",
+          "rpc_method": "dashboard.get_onboarding",
+          "width": "full"
+        },
+        {
+          "id": "total_decisions",
+          "type": "stat_card",
+          "title": "Total decisions",
+          "rpc_method": "dashboard.get_total_decisions",
+          "width": "third"
+        },
+        {
+          "id": "open_decisions",
+          "type": "stat_card",
+          "title": "Open decisions",
+          "rpc_method": "dashboard.get_open_decisions",
+          "width": "third"
+        },
+        {
+          "id": "closed_decisions",
+          "type": "stat_card",
+          "title": "Closed decisions",
+          "rpc_method": "dashboard.get_closed_decisions",
+          "width": "third"
+        },
+        {
+          "id": "recent_decisions",
+          "type": "table",
+          "title": "Recent decisions",
+          "rpc_method": "dashboard.get_recent_decisions",
+          "width": "full",
+          "columns": [
+            {"key": "id", "label": "ID"},
+            {"key": "title", "label": "Title"},
+            {"key": "status", "label": "Status"},
+            {"key": "summary", "label": "Decision and tags"},
+            {"key": "author", "label": "Author ID"},
+            {"key": "recorded", "label": "Recorded"}
+          ]
+        }
+      ]
+    }
+  ]
+}

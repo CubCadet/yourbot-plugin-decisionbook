@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">DecisionBook mark</title>
+  <desc id="desc">An open parchment book with a gold bookmark and green checkmark.</desc>
+  <rect width="512" height="512" rx="104" fill="#172033"/>
+  <path d="M78 134c67-19 126-4 178 39v231c-49-38-108-52-178-34V134Z" fill="#F6F0E3"/>
+  <path d="M434 134c-67-19-126-4-178 39v231c49-38 108-52 178-34V134Z" fill="#F6F0E3"/>
+  <path d="M246 174h20v231l-10 16-10-16V174Z" fill="#C99A2E"/>
+  <path d="m321 255 29 29 65-73" fill="none" stroke="#2D7A5E" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M103 181c46-8 84 1 116 25M103 230c46-8 84 1 116 25M103 279c46-8 84 1 116 25" fill="none" stroke="#667085" stroke-width="12" stroke-linecap="round" opacity=".7"/>
+</svg>

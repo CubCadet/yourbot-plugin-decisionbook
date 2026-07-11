@@ -1,0 +1,92 @@
+{
+  "id": "decisionbook",
+  "name": "DecisionBook",
+  "version": "0.2.0",
+  "description": "Turn important Discord decisions into durable, searchable records.",
+  "tags": ["productivity", "utility", "community", "staff", "decisions"],
+  "capabilities_required": [
+    "interaction:respond",
+    "storage:kv"
+  ],
+  "slash_commands": [
+    {
+      "name": "decision",
+      "description": "Record, review, and close important decisions",
+      "options": [
+        {
+          "name": "add",
+          "description": "Record what was decided and why",
+          "type": 1,
+          "options": []
+        },
+        {
+          "name": "view",
+          "description": "View one decision by ID",
+          "type": 1,
+          "options": [
+            {
+              "name": "id",
+              "description": "Numeric DecisionBook ID",
+              "type": 4,
+              "required": true,
+              "min_value": 1
+            }
+          ]
+        },
+        {
+          "name": "list",
+          "description": "Search, filter, and browse recent decisions",
+          "type": 1,
+          "options": [
+            {
+              "name": "query",
+              "description": "Search title, choice, reason, tags, or ID",
+              "type": 3,
+              "required": false,
+              "max_length": 80
+            },
+            {
+              "name": "status",
+              "description": "Filter by decision status",
+              "type": 3,
+              "required": false,
+              "choices": [
+                {"name": "All", "value": "all"},
+                {"name": "Open", "value": "open"},
+                {"name": "Closed", "value": "closed"}
+              ]
+            },
+            {
+              "name": "limit",
+              "description": "Results per page from 1 to 10",
+              "type": 4,
+              "required": false,
+              "min_value": 1,
+              "max_value": 10
+            }
+          ]
+        },
+        {
+          "name": "close",
+          "description": "Close your decision and record its outcome",
+          "type": 1,
+          "options": [
+            {
+              "name": "id",
+              "description": "Numeric DecisionBook ID",
+              "type": 4,
+              "required": true,
+              "min_value": 1
+            }
+          ]
+        },
+        {
+          "name": "help",
+          "description": "Learn how DecisionBook works",
+          "type": 1,
+          "options": []
+        }
+      ]
+    }
+  ]
+}
