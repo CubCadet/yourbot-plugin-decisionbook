@@ -35,7 +35,6 @@ ALLOWED_PLUGIN_DECORATORS = {
     "on_dashboard",
     "on_install",
     "on_modal_submit",
-    "on_ready",
     "on_slash_command",
 }
 FORBIDDEN_IMPORTS = {
@@ -135,39 +134,44 @@ def gate_tests() -> None:
 def _manifest_version(manifest: dict[str, Any]) -> str:
     require(manifest.get("id") == "decisionbook", "manifest plugin id must be decisionbook")
     manifest_version = manifest.get("version")
-    require(
-        isinstance(manifest_version, str)
-        and re.fullmatch(
+    if (
+        not isinstance(manifest_version, str)
+        or re.fullmatch(
             r"[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?",
             manifest_version,
         )
-        is not None,
-        "manifest version must be semantic",
-    )
+        is None
+    ):
+        raise AuditError("manifest version must be semantic")
     return manifest_version
 
 
 def _root_subcommands(manifest: dict[str, Any]) -> list[dict[str, Any]]:
-    commands = manifest.get("slash_commands")
-    require(isinstance(commands, list), "manifest slash_commands must be a list")
-    require(
-        len(commands) == 1 and isinstance(commands[0], dict),
-        "manifest must declare one root command",
-    )
+    commands_value = manifest.get("slash_commands")
+    if not isinstance(commands_value, list):
+        raise AuditError("manifest slash_commands must be a list")
+    commands = commands_value
+    if len(commands) != 1 or not isinstance(commands[0], dict):
+        raise AuditError("manifest must declare one root command")
     root_command = commands[0]
     require(
         root_command.get("name") == "decision",
         "the root slash command must be /decision",
     )
-    subcommands = root_command.get("options")
-    require(isinstance(subcommands, list), "/decision options must contain subcommands")
-    require(
-        all(isinstance(item, dict) and item.get("type") == 1 for item in subcommands),
-        "every /decision option must be a type-1 subcommand",
-    )
-    subcommand_names = {
-        item.get("name") for item in subcommands if isinstance(item.get("name"), str)
-    }
+    subcommand_values = root_command.get("options")
+    if not isinstance(subcommand_values, list):
+        raise AuditError("/decision options must contain subcommands")
+    subcommands: list[dict[str, Any]] = []
+    for item in subcommand_values:
+        if not isinstance(item, dict) or item.get("type") != 1:
+            raise AuditError("every /decision option must be a type-1 subcommand")
+        subcommands.append(item)
+    subcommand_names: set[str] = set()
+    for item in subcommands:
+        name = item.get("name")
+        if not isinstance(name, str):
+            raise AuditError("/decision subcommand names must be strings")
+        subcommand_names.add(name)
     require(
         len(subcommands) == len(subcommand_names),
         "/decision subcommand names must be unique strings",
@@ -336,8 +340,10 @@ def gate_manifest() -> None:
 
 
 def _validate_declared_capabilities(manifest: dict[str, Any]) -> None:
-    declared = manifest.get("capabilities_required")
-    require(isinstance(declared, list), "capabilities_required must be a list")
+    declared_value = manifest.get("capabilities_required")
+    if not isinstance(declared_value, list):
+        raise AuditError("capabilities_required must be a list")
+    declared = declared_value
     require(len(declared) == len(set(declared)), "capabilities_required contains duplicates")
     require(
         set(declared) == EXPECTED_CAPS,
@@ -394,23 +400,19 @@ def _ephemeral_dedup_call(tree: ast.Module) -> ast.Call:
         for node in ast.walk(tree)
         if isinstance(node, ast.Attribute) and call_path(node) == ("ctx", "ephemeral")
     ]
-    require(
-        len(ephemeral_nodes) == 1,
-        "ctx.ephemeral must be used exactly once for the close dedup guard",
-    )
+    if len(ephemeral_nodes) != 1:
+        raise AuditError("ctx.ephemeral must be used exactly once for the close dedup guard")
     ephemeral_node = ephemeral_nodes[0]
     method_node = parents.get(ephemeral_node)
-    require(
+    if not (
         isinstance(method_node, ast.Attribute)
         and method_node.value is ephemeral_node
-        and method_node.attr == "dedup",
-        "ctx.ephemeral may only access dedup",
-    )
+        and method_node.attr == "dedup"
+    ):
+        raise AuditError("ctx.ephemeral may only access dedup")
     call_node = parents.get(method_node)
-    require(
-        isinstance(call_node, ast.Call) and call_node.func is method_node,
-        "ctx.ephemeral.dedup must be called directly",
-    )
+    if not isinstance(call_node, ast.Call) or call_node.func is not method_node:
+        raise AuditError("ctx.ephemeral.dedup must be called directly")
     return call_node
 
 
@@ -428,11 +430,10 @@ def _validate_ephemeral_owner(tree: ast.Module, call_node: ast.Call) -> None:
 
 
 def _validate_ephemeral_key(call_node: ast.Call) -> None:
-    require(
-        len(call_node.args) == 1 and isinstance(call_node.args[0], ast.JoinedStr),
-        "close dedup must be scoped to the current DecisionBook decision ID",
-    )
-    values = call_node.args[0].values
+    if len(call_node.args) != 1 or not isinstance(call_node.args[0], ast.JoinedStr):
+        raise AuditError("close dedup must be scoped to the current DecisionBook decision ID")
+    joined_key = call_node.args[0]
+    values = joined_key.values
     has_prefix = any(
         isinstance(value, ast.Constant) and value.value == "decisionbook:close:" for value in values
     )
@@ -497,15 +498,14 @@ def gate_builtins() -> None:
 
 def gate_mentions() -> None:
     tree = next(tree for path, tree in trees() if path.name == "decisionbook.py")
-    constants = [
-        node
-        for node in tree.body
-        if isinstance(node, ast.Assign)
-        and any(
+    constants: list[ast.Assign] = []
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(
             isinstance(target, ast.Name) and target.id == "NO_MENTIONS" for target in node.targets
-        )
-    ]
-    require(len(constants) == 1, "NO_MENTIONS must be assigned exactly once")
+        ):
+            constants.append(node)
+    if len(constants) != 1:
+        raise AuditError("NO_MENTIONS must be assigned exactly once")
     try:
         no_mentions = ast.literal_eval(constants[0].value)
     except (TypeError, ValueError) as exc:
@@ -543,17 +543,16 @@ def gate_entrypoint() -> None:
     tree = ast.parse((ROOT / "__main__.py").read_text(encoding="utf-8"), filename="__main__.py")
     require(bool(tree.body), "__main__.py is empty")
     last = tree.body[-1]
-    require(
-        isinstance(last, ast.Expr) and isinstance(last.value, ast.Call),
-        "plugin.run() must be last",
-    )
-    target = call_path(last.value.func)
+    if not isinstance(last, ast.Expr) or not isinstance(last.value, ast.Call):
+        raise AuditError("plugin.run() must be last")
+    run_call = last.value
+    target = call_path(run_call.func)
     require(
         target == ("plugin", "run"),
         "plugin.run() must be the final executable statement",
     )
     require(
-        not last.value.args and not last.value.keywords,
+        not run_call.args and not run_call.keywords,
         "plugin.run() must not receive arguments",
     )
     run_calls = [
@@ -566,21 +565,23 @@ def gate_entrypoint() -> None:
 
 def gate_dashboard() -> None:
     manifest = load_json(ROOT / "dashboard_manifest.json")
-    pages = manifest.get("pages")
-    require(isinstance(pages, list), "dashboard pages must be a list")
+    pages_value = manifest.get("pages")
+    if not isinstance(pages_value, list):
+        raise AuditError("dashboard pages must be a list")
+    pages = pages_value
     expected: set[str] = set()
     for page in pages:
-        require(
-            isinstance(page, dict) and isinstance(page.get("widgets"), list),
-            "dashboard page is malformed",
-        )
-        for widget in page["widgets"]:
-            require(isinstance(widget, dict), "dashboard widget is malformed")
+        if not isinstance(page, dict):
+            raise AuditError("dashboard page is malformed")
+        widgets = page.get("widgets")
+        if not isinstance(widgets, list):
+            raise AuditError("dashboard page is malformed")
+        for widget in widgets:
+            if not isinstance(widget, dict):
+                raise AuditError("dashboard widget is malformed")
             rpc_method = widget.get("rpc_method")
-            require(
-                isinstance(rpc_method, str) and rpc_method.startswith("dashboard."),
-                "dashboard rpc_method must start with dashboard.",
-            )
+            if not isinstance(rpc_method, str) or not rpc_method.startswith("dashboard."):
+                raise AuditError("dashboard rpc_method must start with dashboard.")
             expected.add(rpc_method.removeprefix("dashboard."))
 
     source = ast.parse((ROOT / "decisionbook.py").read_text(encoding="utf-8"))

@@ -1,21 +1,35 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
+from typing import Any
 
 from conftest import AUTHOR_ID, subcommand
-from yourbot_sdk import ActionRow, Button, TextInput
+from yourbot_sdk import ActionRow, Button, Context, TextInput
 from yourbot_sdk._context import _InteractionApi
+from yourbot_sdk._transport import Transport
 
 from decisionbook import decision_command
 
 
-class SpyTransport:
-    def __init__(self):
-        self.calls = []
+class SpyTransport(Transport):
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, dict[str, Any]]] = []
 
-    def call(self, method, payload):
-        self.calls.append((method, payload))
+    def call(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
+        self.calls.append((method, params))
         return {}
+
+
+def interaction_api(interaction_id: str) -> tuple[SpyTransport, _InteractionApi]:
+    transport = SpyTransport()
+    context = Context(
+        server_id="server-1",
+        plugin_id="decisionbook",
+        version="test",
+        capabilities=["interaction:respond"],
+        transport=transport,
+    )
+    context._current_interaction_id = interaction_id
+    return transport, context.interaction
 
 
 def test_component_builders_emit_valid_discord_shapes():
@@ -30,11 +44,7 @@ def test_component_builders_emit_valid_discord_shapes():
 
 
 def test_real_sdk_serializes_components_and_mention_policy():
-    transport = SpyTransport()
-    api = _InteractionApi(
-        transport,
-        ctx=SimpleNamespace(_current_interaction_id="interaction-1"),
-    )
+    transport, api = interaction_api("interaction-1")
     api.respond(
         embeds=[{"title": "Decision"}],
         components=[ActionRow(Button("Close", custom_id="decision:close:1"))],
@@ -51,11 +61,7 @@ def test_real_sdk_serializes_components_and_mention_policy():
 
 
 def test_real_sdk_wraps_bare_modal_fields_in_action_rows():
-    transport = SpyTransport()
-    api = _InteractionApi(
-        transport,
-        ctx=SimpleNamespace(_current_interaction_id="interaction-2"),
-    )
+    transport, api = interaction_api("interaction-2")
     api.send_modal(
         title="Record a decision",
         custom_id="decision:add",

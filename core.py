@@ -9,7 +9,7 @@ from copy import deepcopy
 from datetime import UTC, datetime
 from typing import Any
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 KEY_WIDTH = 12
 SCAN_LIMIT = 500
 MAX_TAGS = 5
@@ -241,6 +241,23 @@ def parse_discord_id(value: Any) -> str:
     return candidate
 
 
+def parse_channel_id(value: Any) -> str:
+    """Return a canonical unsigned 64-bit Discord channel snowflake string."""
+    if isinstance(value, bool):
+        raise InputError("Discord did not provide a valid channel identity. Please try again.")
+    if isinstance(value, int):
+        candidate = str(value)
+    elif isinstance(value, str):
+        candidate = value.strip()
+    else:
+        raise InputError("Discord did not provide a valid channel identity. Please try again.")
+    if not _DISCORD_SNOWFLAKE.fullmatch(candidate):
+        raise InputError("Discord did not provide a valid channel identity. Please try again.")
+    if int(candidate) > DISCORD_SNOWFLAKE_MAX:
+        raise InputError("Discord did not provide a valid channel identity. Please try again.")
+    return candidate
+
+
 def parse_rfc3339(value: Any) -> str:
     """Validate and return a timezone-aware RFC 3339 timestamp."""
     if not isinstance(value, str) or _RFC3339.fullmatch(value) is None:
@@ -262,9 +279,11 @@ def make_record(
     reason: Any,
     tags: Any,
     author_id: Any,
+    channel_id: Any,
     created_at: str | None = None,
 ) -> dict[str, Any]:
     author = parse_discord_id(author_id)
+    channel = parse_channel_id(channel_id)
     timestamp = parse_rfc3339(created_at or utc_now())
     return {
         "schema_version": SCHEMA_VERSION,
@@ -275,6 +294,7 @@ def make_record(
         "tags": parse_tags(tags),
         "status": "open",
         "author_id": author,
+        "channel_id": channel,
         "created_at": timestamp,
         "closure": None,
     }
@@ -344,6 +364,9 @@ def _validated_record(value: Any) -> dict[str, Any]:
     if not isinstance(record.get("author_id"), str):
         raise InputError("Stored author is invalid.")
     record["author_id"] = parse_discord_id(record["author_id"])
+    if not isinstance(record.get("channel_id"), str):
+        raise InputError("Stored channel is invalid.")
+    record["channel_id"] = parse_channel_id(record["channel_id"])
     record["created_at"], created_at = _parse_timestamp(record.get("created_at"))
 
     status = record.get("status")
@@ -360,7 +383,7 @@ def _validated_record(value: Any) -> dict[str, Any]:
 
 
 def parse_record(value: Any) -> dict[str, Any] | None:
-    """Return a normalized defensive copy of a schema-1 record, or None."""
+    """Return a normalized defensive copy of a schema-2 record, or None."""
     try:
         return _validated_record(value)
     except (InputError, OverflowError, TypeError, ValueError):
@@ -477,26 +500,6 @@ def matching_records(
         and record_matches(item, clean_query)
     ]
     return sorted(matches, key=lambda item: item["id"], reverse=True)
-
-
-def filter_records(
-    records: Iterable[dict[str, Any]],
-    *,
-    query: str = "",
-    status: str = "all",
-    limit: int = 5,
-    offset: int = 0,
-    page: int | None = None,
-) -> list[dict[str, Any]]:
-    """Return one newest-first result page while retaining the original API."""
-    safe_limit = min(_whole_number(limit, name="Limit", minimum=1), 10)
-    safe_offset = _whole_number(offset, name="Offset", minimum=0)
-    if page is not None:
-        if safe_offset:
-            raise InputError("Use either page or offset, not both.")
-        safe_offset = (_whole_number(page, name="Page", minimum=1) - 1) * safe_limit
-    ordered = matching_records(records, query=query, status=status)
-    return ordered[safe_offset : safe_offset + safe_limit]
 
 
 def decision_embed(record: dict[str, Any]) -> dict[str, Any]:

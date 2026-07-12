@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from typing import Any
 
 import pytest
 
 from core import (
+    SCHEMA_VERSION,
     InputError,
     close_record,
     decision_embed,
@@ -17,7 +19,7 @@ from core import (
 )
 
 
-def base():
+def base() -> dict[str, Any]:
     return make_record(
         1,
         title="Title",
@@ -25,6 +27,7 @@ def base():
         reason="Reason",
         tags="one,two",
         author_id="42",
+        channel_id="84",
         created_at="2026-07-11T00:00:00+00:00",
     )
 
@@ -38,7 +41,7 @@ def test_regression_unknown_same_schema_fields_survive_closure():
 
 def test_regression_future_schema_never_renders_as_current():
     item = base()
-    item["schema_version"] = 2
+    item["schema_version"] = SCHEMA_VERSION + 1
     assert parse_record(item) is None
 
 
@@ -119,10 +122,13 @@ def test_regression_international_tags_are_not_erased():
         reason="Ready",
         tags="Équipe, 開発",
         author_id="42",
+        channel_id="84",
         created_at="2026-07-11T00:00:00Z",
     )
     assert item["tags"] == ["équipe", "開発"]
-    assert parse_record(item)["tags"] == ["équipe", "開発"]
+    parsed = parse_record(item)
+    assert parsed is not None
+    assert parsed["tags"] == ["équipe", "開発"]
 
 
 def test_regression_detailed_reason_keeps_paragraphs_in_storage_and_embed():
@@ -133,6 +139,7 @@ def test_regression_detailed_reason_keeps_paragraphs_in_storage_and_embed():
         reason="Constraint one\n\nConstraint two",
         tags="",
         author_id="42",
+        channel_id="84",
         created_at="2026-07-11T00:00:00Z",
     )
     assert item["reason"] == "Constraint one\n\nConstraint two"

@@ -13,7 +13,6 @@ ALLOWED_DECORATORS = {
     "on_dashboard",
     "on_install",
     "on_modal_submit",
-    "on_ready",
     "on_slash_command",
 }
 FORBIDDEN_IMPORTS = {

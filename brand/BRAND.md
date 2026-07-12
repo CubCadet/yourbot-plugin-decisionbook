@@ -11,7 +11,7 @@ DecisionBook is deliberate, trustworthy, calm, and clear. Use concise factual la
 
 ## Product language
 
-The v0.2 interface uses one `/decision` root with `add`, `view`, `list`, `close`, and `help`
+The v0.3 interface uses one `/decision` root with `add`, `view`, `list`, `close`, and `help`
 subcommands. Spell these with spaces—never revive the v0.1 `/decision-add` style.
 
 - Creation says **Record a decision**, not “create ticket” or “submit request.”
@@ -21,6 +21,10 @@ subcommands. Spell these with spaces—never revive the v0.1 `/decision-add` sty
 - Empty states should teach the next action: start with `/decision add` or refresh with
   `/decision list`.
 - Original details are **immutable**; avoid wording that implies edits or deletion.
+- Channel-scoped means DecisionBook will not retrieve a record from another channel. It does not
+  mean channel output is secret; never market ordinary Discord responses as private storage.
+- The close command opens the outcome modal first, then verifies its actor/channel/decision token
+  when submitted. Avoid copy that promises pre-validation before the form appears.
 
 ## Interface accessibility
 
@@ -32,8 +36,10 @@ subcommands. Spell these with spaces—never revive the v0.1 `/decision-add` sty
 - Escape user-authored Markdown and suppress mentions without making international text or joined
   emoji feel broken.
 - Keep action labels direct: **View #12**, **Previous**, **Next**, and **Close decision**.
-- On narrow dashboard layouts, prioritize ID, title, status, summary, author, and recorded time; the
-  dashboard remains read-only.
+- Previous/Next acknowledges the button and sends a new ephemeral page; do not describe it as an
+  in-place update to the original list.
+- On narrow dashboard layouts, preserve the five current fields: ID, status, summary, recorded time,
+  and close time. The manager dashboard remains read-only and intentionally server-wide.
 
 ## Palette
 
@@ -50,6 +56,5 @@ The mark combines an open book, central gold bookmark, and green check. Preserve
 to the bookmark width. Do not recolor the check red or distort the aspect ratio.
 
 The SVG source is for brand/export use. A 512 px, marketplace-sized raster export is included as
-`decisionbook-icon-512.png`. The manifest intentionally omits `icon_url` until a human owner
-hosts that PNG over HTTPS. The manifest `author` is likewise the real YourBot developer identity;
-neither value should be invented by automation.
+`decisionbook-icon-512.png`. The first supported Marketplace/public release is v0.3; its manifest
+publishes the verified `CubCadet` byline and a version-pinned HTTPS URL for the tagged icon asset.

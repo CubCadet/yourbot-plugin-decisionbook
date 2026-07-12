@@ -22,13 +22,17 @@ def test_manifest_identity_version_and_exact_capabilities():
     manifest = load("manifest.json")
     assert manifest["id"] == "decisionbook"
     assert manifest["name"] == "DecisionBook"
-    assert manifest["version"] == "0.2.0"
+    assert manifest["version"] == "0.3.0"
+    assert manifest["author"] == "CubCadet"
+    assert manifest["icon_url"] == (
+        "https://raw.githubusercontent.com/CubCadet/"
+        "yourbot-plugin-decisionbook/v0.3.0/brand/decisionbook-icon-512.png"
+    )
     assert set(manifest["capabilities_required"]) == {
         "interaction:respond",
         "storage:kv",
     }
     assert "proxy_domains_requested" not in manifest
-    assert "icon_url" not in manifest
 
 
 def test_one_root_command_with_exact_subcommands():
@@ -117,17 +121,25 @@ def test_dashboard_rpc_names_match_python_handlers():
 
 def test_dashboard_is_read_only_and_responsive():
     dashboard = load("dashboard_manifest.json")
-    widgets = dashboard["pages"][0]["widgets"]
-    assert {item["type"] for item in widgets} == {"markdown", "stat_card", "table"}
+    page = dashboard["pages"][0]
+    assert page["permission"] == "manager"
+    widgets = page["widgets"]
+    assert {item["type"] for item in widgets} == {
+        "alert",
+        "markdown",
+        "stat_card",
+        "table",
+    }
     assert all("save_method" not in item for item in widgets)
+    alert = next(item for item in widgets if item["type"] == "alert")
+    assert alert["rpc_method"] == "dashboard.get_storage_health"
     table = next(item for item in widgets if item["type"] == "table")
     assert [column["key"] for column in table["columns"]] == [
         "id",
-        "title",
         "status",
         "summary",
-        "author",
         "recorded",
+        "closed",
     ]
 
 

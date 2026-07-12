@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from datetime import UTC, datetime
+from typing import Any
 
 import pytest
 
@@ -16,7 +17,6 @@ from core import (
     display_multiline_text,
     display_text,
     escape_discord_markdown,
-    filter_records,
     list_embed,
     make_record,
     matching_records,
@@ -32,7 +32,7 @@ from core import (
 )
 
 
-def record(decision_id: int = 1, **overrides):
+def record(decision_id: int = 1, **overrides: Any) -> dict[str, Any]:
     data = make_record(
         decision_id,
         title="Event time",
@@ -40,6 +40,7 @@ def record(decision_id: int = 1, **overrides):
         reason="Best regional overlap",
         tags="events, scheduling",
         author_id="42",
+        channel_id="84",
         created_at="2026-07-11T18:30:00+00:00",
     )
     data.update(overrides)
@@ -204,14 +205,30 @@ def test_rfc3339_parser_rejects_naive_or_invalid_timestamps(value):
 
 
 def test_make_record_has_version_and_aware_timestamp():
-    item = make_record(1, title="T", choice="C", reason="R", tags="", author_id="42")
+    item = make_record(
+        1,
+        title="T",
+        choice="C",
+        reason="R",
+        tags="",
+        author_id="42",
+        channel_id="84",
+    )
     assert item["schema_version"] == SCHEMA_VERSION
     assert datetime.fromisoformat(item["created_at"]).tzinfo is not None
 
 
 def test_make_record_rejects_invalid_author_and_supplied_timestamp():
     with pytest.raises(InputError):
-        make_record(1, title="T", choice="C", reason="R", tags="", author_id="not-a-snowflake")
+        make_record(
+            1,
+            title="T",
+            choice="C",
+            reason="R",
+            tags="",
+            author_id="not-a-snowflake",
+            channel_id="84",
+        )
     with pytest.raises(InputError):
         make_record(
             1,
@@ -220,6 +237,7 @@ def test_make_record_rejects_invalid_author_and_supplied_timestamp():
             reason="R",
             tags="",
             author_id="42",
+            channel_id="84",
             created_at="2026-07-11T18:30:00",
         )
 
@@ -268,7 +286,9 @@ def test_parser_requires_canonical_unique_stored_tags(tags):
 def test_parser_accepts_canonical_unicode_stored_tags():
     item = record()
     item["tags"] = ["équipe", "開発", "हिंदी"]
-    assert parse_record(item)["tags"] == ["équipe", "開発", "हिंदी"]
+    parsed = parse_record(item)
+    assert parsed is not None
+    assert parsed["tags"] == ["équipe", "開発", "हिंदी"]
 
 
 @pytest.mark.parametrize("author", [True, 1, "01", "author-1", str(1 << 64)])
@@ -297,6 +317,7 @@ def test_parser_rejects_boolean_schema_version():
 def test_parser_returns_copy():
     original = record()
     parsed = parse_record(original)
+    assert parsed is not None
     parsed["title"] = "changed"
     assert original["title"] == "Event time"
 
@@ -385,28 +406,18 @@ def test_search_covers_id_text_and_tags_case_insensitively():
     assert record_matches(item, "1")
 
 
-def test_filtering_is_newest_first_bounded_and_status_aware():
+def test_matching_is_newest_first_and_status_aware():
     open_one = record(1)
     closed_two = close_record(
         record(2), actor_id="42", outcome="Done", closed_at="2026-07-12T00:00:00+00:00"
     )
     newest = record(3, title="Newest")
-    assert [x["id"] for x in filter_records([open_one, closed_two, newest], limit=2)] == [3, 2]
-    assert [x["id"] for x in filter_records([open_one, closed_two, newest], status="closed")] == [2]
+    assert [x["id"] for x in matching_records([open_one, closed_two, newest])] == [3, 2, 1]
+    assert [x["id"] for x in matching_records([open_one, closed_two, newest], status="closed")] == [
+        2
+    ]
     with pytest.raises(InputError):
-        filter_records([open_one], status="invalid")
-
-
-def test_filtering_supports_offset_and_page_without_expanding_page_size():
-    items = [record(index) for index in range(1, 26)]
-    assert [item["id"] for item in filter_records(items, limit=10, offset=10)] == list(
-        range(15, 5, -1)
-    )
-    assert [item["id"] for item in filter_records(items, limit=99, page=3)] == list(range(5, 0, -1))
-    with pytest.raises(InputError, match="either page or offset"):
-        filter_records(items, limit=5, offset=5, page=2)
-    with pytest.raises(InputError):
-        filter_records(items, limit=1.5)
+        matching_records([open_one], status="invalid")
 
 
 def test_matching_records_returns_full_sorted_valid_set_for_exact_totals():

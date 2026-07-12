@@ -3,12 +3,20 @@
     {
       "id": "overview",
       "title": "DecisionBook Overview",
+      "permission": "manager",
       "widgets": [
         {
           "id": "onboarding",
           "type": "markdown",
           "title": "Quick start",
           "rpc_method": "dashboard.get_onboarding",
+          "width": "full"
+        },
+        {
+          "id": "storage_health",
+          "type": "alert",
+          "title": "Ledger health",
+          "rpc_method": "dashboard.get_storage_health",
           "width": "full"
         },
         {
@@ -40,11 +48,10 @@
           "width": "full",
           "columns": [
             {"key": "id", "label": "ID"},
-            {"key": "title", "label": "Title"},
             {"key": "status", "label": "Status"},
-            {"key": "summary", "label": "Decision and tags"},
-            {"key": "author", "label": "Author ID"},
-            {"key": "recorded", "label": "Recorded"}
+            {"key": "summary", "label": "Decision"},
+            {"key": "recorded", "label": "Recorded"},
+            {"key": "closed", "label": "Closed"}
           ]
         }
       ]

@@ -12,6 +12,8 @@ if str(ROOT) not in sys.path:
 
 AUTHOR_ID = "100000000000000001"
 OTHER_ID = "100000000000000002"
+CHANNEL_ID = "1"
+OTHER_CHANNEL_ID = "2"
 
 
 @pytest.fixture
@@ -19,21 +21,35 @@ def ctx() -> MockContext:
     return MockContext(
         server_id="100000000000000099",
         plugin_id="decisionbook",
-        version="0.2.0",
+        version="0.3.0",
         capabilities=["interaction:respond", "storage:kv"],
     )
 
 
-def interaction(command: str = "decision", *, user_id: str = AUTHOR_ID, **options):
+def interaction(
+    command: str = "decision",
+    *,
+    user_id: str = AUTHOR_ID,
+    channel_id: str = CHANNEL_ID,
+    **options,
+):
     return make_event(
         "interaction_create",
         command_name=command,
         user_id=user_id,
+        channel_id=channel_id,
         options=[{"name": key, "value": value} for key, value in options.items()],
     )
 
 
-def subcommand(name: str, *, user_id: str = AUTHOR_ID, option_key: str = "options", **options):
+def subcommand(
+    name: str,
+    *,
+    user_id: str = AUTHOR_ID,
+    channel_id: str = CHANNEL_ID,
+    option_key: str = "options",
+    **options,
+):
     nested = [
         {
             "name": name,
@@ -52,24 +68,50 @@ def subcommand(name: str, *, user_id: str = AUTHOR_ID, option_key: str = "option
         "interaction_create",
         command_name="decision",
         user_id=user_id,
+        channel_id=channel_id,
         **{option_key: nested},
     )
 
 
-def modal(custom_id: str, *, user_id: str = AUTHOR_ID, **values):
+def modal(
+    custom_id: str,
+    *,
+    user_id: str = AUTHOR_ID,
+    channel_id: str = CHANNEL_ID,
+    **values,
+):
     return make_event(
         "interaction_create",
         interaction_type=5,
         custom_id=custom_id,
         user_id=user_id,
+        channel_id=channel_id,
         modal_values=values,
     )
 
 
-def component(custom_id: str, *, user_id: str = AUTHOR_ID):
+def component(
+    custom_id: str,
+    *,
+    user_id: str = AUTHOR_ID,
+    channel_id: str = CHANNEL_ID,
+):
     return make_event(
         "interaction_create",
         interaction_type=3,
         custom_id=custom_id,
         user_id=user_id,
+        channel_id=channel_id,
     )
+
+
+def invoke(ctx: MockContext, handler, *args, **kwargs):
+    """Call an interaction handler and return the delivery it produced."""
+    response_count = len(ctx.interaction.responses)
+    followup_count = len(ctx.interaction.followups)
+    handler(ctx, *args, **kwargs)
+    if len(ctx.interaction.followups) > followup_count:
+        return ctx.interaction.followups[-1]
+    if len(ctx.interaction.responses) > response_count:
+        return ctx.interaction.responses[-1]
+    raise AssertionError("The interaction handler did not deliver a response or follow-up.")

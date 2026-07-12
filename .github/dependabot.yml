@@ -4,8 +4,41 @@ updates:
     directory: /
     schedule:
       interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/New_York
+    open-pull-requests-limit: 10
+    groups:
+      github-actions:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      github-actions-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
   - package-ecosystem: pip
     directory: /
     schedule:
       interval: weekly
+      day: monday
+      time: "07:15"
+      timezone: America/New_York
+    open-pull-requests-limit: 10
+    versioning-strategy: increase-if-necessary
+    groups:
+      python-development:
+        applies-to: version-updates
+        dependency-type: development
+        patterns:
+          - "*"
+      python-production:
+        applies-to: version-updates
+        dependency-type: production
+        patterns:
+          - "*"
+      python-security:
+        applies-to: security-updates
+        patterns:
+          - "*"

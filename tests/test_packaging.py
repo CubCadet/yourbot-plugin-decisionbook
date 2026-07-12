@@ -106,6 +106,13 @@ def test_bundle_has_exact_source_content_and_deterministic_metadata(tmp_path):
             assert info.external_attr >> 16 == stat.S_IFREG | 0o644
 
 
+def test_marketplace_bundle_contains_no_workstation_specific_paths(tmp_path):
+    output = build(tmp_path / artifact_filename())
+    with zipfile.ZipFile(output) as archive:
+        for name in RUNTIME_FILES:
+            assert b"/home/kace/" not in archive.read(name), name
+
+
 def test_failed_build_removes_partial_temporary_file(tmp_path, monkeypatch):
     output = tmp_path / artifact_filename()
 

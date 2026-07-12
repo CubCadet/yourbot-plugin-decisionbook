@@ -1,8 +1,10 @@
 {
   "id": "decisionbook",
   "name": "DecisionBook",
-  "version": "0.2.0",
-  "description": "Turn important Discord decisions into durable, searchable records.",
+  "version": "0.3.0",
+  "description": "Turn important Discord decisions into durable, channel-scoped records.",
+  "author": "CubCadet",
+  "icon_url": "https://raw.githubusercontent.com/CubCadet/yourbot-plugin-decisionbook/v0.3.0/brand/decisionbook-icon-512.png",
   "tags": ["productivity", "utility", "community", "staff", "decisions"],
   "capabilities_required": [
     "interaction:respond",
@@ -11,7 +13,7 @@
   "slash_commands": [
     {
       "name": "decision",
-      "description": "Record, review, and close important decisions",
+      "description": "Record, review, and close decisions in this channel",
       "options": [
         {
           "name": "add",
@@ -35,7 +37,7 @@
         },
         {
           "name": "list",
-          "description": "Search, filter, and browse recent decisions",
+          "description": "Search and browse decisions from this channel",
           "type": 1,
           "options": [
             {

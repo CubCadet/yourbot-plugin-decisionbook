@@ -18,6 +18,6 @@ show_missing = true
 skip_covered = false
 
 [tool.basedpyright]
-include = ["core.py", "decisionbook.py"]
+include = ["__main__.py", "core.py", "decisionbook.py", "tools", "tests"]
 pythonVersion = "3.12"
 typeCheckingMode = "standard"
