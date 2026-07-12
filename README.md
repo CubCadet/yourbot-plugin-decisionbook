@@ -91,11 +91,16 @@ manager dashboard is intentionally server-wide and can show decisions from every
 
 ## Release and schema compatibility
 
-v0.3.0 is DecisionBook's first supported Marketplace/public release. Its schema-2 records require
-an originating channel. Historical v0.2 development ledgers used schema 1 and did not store that
-identity, so they cannot be upgraded directly or assigned a channel safely by this runtime. Do not
-install v0.3 over schema-1 data without an explicit, reviewed migration; the plugin fails closed
-rather than guessing or resetting the ledger.
+v0.3.1 is the current compatibility patch on DecisionBook's v0.3 release line; v0.3.0 remains the
+first supported Marketplace/public release. Schema-2 records require an originating channel.
+Historical v0.2 development ledgers used schema 1 and did not store that identity, so they cannot
+be upgraded directly or assigned a channel safely by this runtime. Do not install v0.3 over
+schema-1 data without an explicit, reviewed migration; the plugin fails closed rather than guessing
+or resetting the ledger.
+
+SDK 0.8.3 documents `capabilities_required` as canonical while its deployment transition still
+contains consumers of `capabilities_requested`. DecisionBook mirrors the same exact two Safe-tier
+capabilities in both fields. The mirror is compatibility metadata, not an additional permission.
 
 ## Development
 
@@ -137,7 +142,7 @@ python3 tools/build_bundle.py
 python3 tools/validate_bundle.py
 ```
 
-The builder derives `dist/decisionbook-0.3.0.zip` from the ID and version in `manifest.json`. The ZIP
+The builder derives `dist/decisionbook-0.3.1.zip` from the ID and version in `manifest.json`. The ZIP
 is deterministic, contains only the explicit runtime allowlist, and places `manifest.json` plus
 `__main__.py` at its root.
 

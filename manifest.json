@@ -1,12 +1,16 @@
 {
   "id": "decisionbook",
   "name": "DecisionBook",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Turn important Discord decisions into durable, channel-scoped records.",
   "author": "CubCadet",
   "icon_url": "https://raw.githubusercontent.com/CubCadet/yourbot-plugin-decisionbook/v0.3.0/brand/decisionbook-icon-512.png",
   "tags": ["productivity", "utility", "community", "staff", "decisions"],
   "capabilities_required": [
+    "interaction:respond",
+    "storage:kv"
+  ],
+  "capabilities_requested": [
     "interaction:respond",
     "storage:kv"
   ],

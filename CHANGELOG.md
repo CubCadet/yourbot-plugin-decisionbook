@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.1 — 2026-07-12
+
+### Deployment compatibility
+
+- Mirrored the canonical `capabilities_required` list into `capabilities_requested` for the
+  YourBot SDK 0.8.3 deployment transition. Both fields request the same two Safe-tier permissions;
+  this does not expand DecisionBook's capability boundary.
+- Strengthened manifest tests and the fail-closed release audit so either missing field, duplicate
+  entry, unexpected capability, ordering drift, or disagreement between the two fields blocks a
+  future bundle.
+- Kept the public icon pinned to the immutable v0.3.0 brand asset because the artwork did not
+  change in this patch.
+
 ## 0.3.0 — 2026-07-11
 
 First supported Marketplace/public release. Historical v0.2 development data uses schema 1 and is

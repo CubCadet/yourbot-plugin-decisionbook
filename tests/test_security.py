@@ -4,6 +4,10 @@ import ast
 import json
 from pathlib import Path
 
+import pytest
+
+from tools.run_audit import AuditError, _validate_declared_capabilities
+
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = [ROOT / "core.py", ROOT / "decisionbook.py", ROOT / "__main__.py"]
 EXPECTED_CAPABILITIES = {"interaction:respond", "storage:kv"}
@@ -83,10 +87,53 @@ def test_all_project_python_compiles():
 
 def test_exact_capabilities_and_no_proxy_domains():
     manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
-    declared = manifest["capabilities_required"]
-    assert len(declared) == len(set(declared))
-    assert set(declared) == EXPECTED_CAPABILITIES
+    required = manifest["capabilities_required"]
+    requested = manifest["capabilities_requested"]
+    assert isinstance(required, list)
+    assert isinstance(requested, list)
+    assert required == requested
+    for declared in (required, requested):
+        assert len(declared) == len(set(declared))
+        assert set(declared) == EXPECTED_CAPABILITIES
+    assert "requested_capabilities" not in manifest
+    assert "capabilities" not in manifest
     assert "proxy_domains_requested" not in manifest
+
+
+def test_release_audit_rejects_capability_compatibility_drift():
+    expected = ["interaction:respond", "storage:kv"]
+    invalid_manifests = [
+        ({"capabilities_required": expected}, "capabilities_requested must be a list"),
+        (
+            {"capabilities_required": expected, "capabilities_requested": "storage:kv"},
+            "capabilities_requested must be a list",
+        ),
+        (
+            {
+                "capabilities_required": expected,
+                "capabilities_requested": ["storage:kv", "interaction:respond"],
+            },
+            "capabilities_requested must be exactly",
+        ),
+        (
+            {
+                "capabilities_required": expected,
+                "capabilities_requested": [*expected, "storage:kv"],
+            },
+            "capabilities_requested contains duplicates",
+        ),
+        (
+            {
+                "capabilities_required": expected,
+                "capabilities_requested": expected,
+                "capabilities": expected,
+            },
+            "historical capability alias capabilities must not be present",
+        ),
+    ]
+    for manifest, message in invalid_manifests:
+        with pytest.raises(AuditError, match=message):
+            _validate_declared_capabilities(manifest)
 
 
 def test_no_forbidden_imports_or_dangerous_calls():

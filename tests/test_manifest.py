@@ -22,16 +22,20 @@ def test_manifest_identity_version_and_exact_capabilities():
     manifest = load("manifest.json")
     assert manifest["id"] == "decisionbook"
     assert manifest["name"] == "DecisionBook"
-    assert manifest["version"] == "0.3.0"
+    assert manifest["version"] == "0.3.1"
     assert manifest["author"] == "CubCadet"
     assert manifest["icon_url"] == (
         "https://raw.githubusercontent.com/CubCadet/"
         "yourbot-plugin-decisionbook/v0.3.0/brand/decisionbook-icon-512.png"
     )
-    assert set(manifest["capabilities_required"]) == {
+    expected_capabilities = [
         "interaction:respond",
         "storage:kv",
-    }
+    ]
+    assert manifest["capabilities_required"] == expected_capabilities
+    assert manifest["capabilities_requested"] == expected_capabilities
+    assert "requested_capabilities" not in manifest
+    assert "capabilities" not in manifest
     assert "proxy_domains_requested" not in manifest
 
 

@@ -21,7 +21,7 @@ def ctx() -> MockContext:
     return MockContext(
         server_id="100000000000000099",
         plugin_id="decisionbook",
-        version="0.3.0",
+        version="0.3.1",
         capabilities=["interaction:respond", "storage:kv"],
     )
 

@@ -1,6 +1,6 @@
 # DecisionBook project context
 
-Updated: 2026-07-11
+Updated: 2026-07-12
 
 ## Why this exists
 
@@ -12,7 +12,7 @@ alone. `ARCHITECTURE.md` is the normative technical companion for the current re
 
 - Name: **DecisionBook**
 - Plugin ID: `decisionbook`
-- Version: `0.3.0`
+- Version: `0.3.1`
 - Author: **CubCadet**
 - Tagline: **Decisions remembered. Context preserved.**
 - Marketplace line: **Record what was decided, why it was chosen, and how it turned out.**
@@ -23,7 +23,7 @@ DecisionBook fills the gap between disposable Discord chat and heavyweight proje
 software. It is intentionally an immutable decision ledger—not a poll bot, ticket system,
 moderation suite, or AI summarizer.
 
-## v0.3.0 customer experience
+## v0.3.x customer experience
 
 The manifest declares one `/decision` root command with five type-1 subcommands:
 
@@ -100,7 +100,7 @@ timestamps, closure authorship/chronology, schema version, and the payload-ID-to
 
 The schema marker is strict: a truly empty namespace initializes schema 2, while decision keys with
 no marker fail closed rather than being silently relabeled. Incompatible values also fail closed.
-Schema 1 has no channel identity, so v0.3.0 does not guess one, silently reset the ledger, or
+Schema 1 has no channel identity, so v0.3.x does not guess one, silently reset the ledger, or
 auto-migrate. Any existing schema-1 deployment requires an explicit reviewed migration that assigns
 each record to a channel before this runtime can use it.
 
@@ -199,12 +199,16 @@ when necessary. The health warning changes from info to warn when fewer than 500
 
 ## Release engineering
 
-v0.3.0 is the first supported Marketplace/public release. The v0.2.0 material below is a historical
-development snapshot only. Schema 1 lacks channel identity and is not a direct upgrade source for
-the schema-2 runtime; migration must be explicit and reviewed.
+v0.3.1 is the current deployment-compatibility patch; v0.3.0 remains the first supported
+Marketplace/public release. The patch mirrors the exact two Safe-tier capabilities across the
+canonical `capabilities_required` field and the SDK 0.8.3 transition field
+`capabilities_requested`. This is compatibility metadata, not an expanded permission set. The
+v0.2.0 material below is a historical development snapshot only. Schema 1 lacks channel identity
+and is not a direct upgrade source for the schema-2 runtime; migration must be explicit and
+reviewed.
 
 `tools/build_bundle.py` validates manifest identity and derives
-`dist/decisionbook-0.3.0.zip`. The nine-file bundle uses a fixed allowlist, timestamp, compression,
+`dist/decisionbook-0.3.1.zip`. The nine-file bundle uses a fixed allowlist, timestamp, compression,
 permissions, and ordering. `tools/validate_bundle.py` rejects unsafe paths, duplicates, links,
 executables, expansion-limit violations, stale entries, and source/allowlist mismatches without
 extracting or executing the archive.
@@ -219,7 +223,7 @@ runtime and development dependency audits, branch coverage with a 90% floor, SDK
 and trusted-branch/tag artifact upload. A separate pinned CodeQL workflow analyzes Python and GitHub
 Actions. Dependabot groups weekly Python and GitHub Actions updates.
 
-Reproduce the v0.3.0 release checks with:
+Reproduce the v0.3.1 release checks with:
 
 ```bash
 python3 -m pip install -r requirements-dev.txt
@@ -234,10 +238,30 @@ yourbot validate --path .
 yourbot doctor --path .
 python3 tools/run_audit.py
 python3 tools/validate_bundle.py
-sha256sum dist/decisionbook-0.3.0.zip
+sha256sum dist/decisionbook-0.3.1.zip
 ```
 
-## v0.3.0 verification snapshot
+## v0.3.1 verification snapshot
+
+The final compatibility-patch pipeline recorded:
+
+- 276 passing tests
+- 90.41% branch coverage, above the enforced 90% floor
+- clean Ruff formatting/lint, full-tree Basedpyright, Bandit medium/high, codespell, and Vulture
+- no known runtime or development dependency vulnerabilities
+- clean `yourbot validate` and all-green `yourbot doctor`
+- 15/15 explicit audit gates passed, including staged bundle validation
+- source and bundled manifests with identical `capabilities_required` and
+  `capabilities_requested` arrays
+- deterministic source-identical ZIP built twice with the same digest
+- artifact: `dist/decisionbook-0.3.1.zip`
+- ZIP size: 29,897 bytes, 9 runtime files
+- SHA-256: `cdfa00a71b259a47e4901af0d000fa46698fccaa5ec9973879582a6d40afd59b`
+
+Any later bundled source, `README.md`, or `CHANGELOG.md` change legitimately changes the digest and
+requires a rebuild and updated snapshot.
+
+## Historical v0.3.0 verification snapshot
 
 The final integrated pipeline recorded:
 
@@ -251,9 +275,6 @@ The final integrated pipeline recorded:
 - artifact: `dist/decisionbook-0.3.0.zip`
 - ZIP size: 29,483 bytes, 9 runtime files
 - SHA-256: `d2bbb2f64d99c8dd906c776900e2a6f915be9457c0935132a56d46bd97766c02`
-
-Any later bundled source, `README.md`, or `CHANGELOG.md` change legitimately changes the digest and
-requires a rebuild and updated snapshot.
 
 ## Historical v0.2.0 development verification snapshot
 
@@ -270,7 +291,7 @@ The pre-release development snapshot used `yourbot-sdk 0.8.3` and recorded:
 - ZIP size: 21,403 bytes, 9 runtime files
 - SHA-256: `3d683b1218d11abca0614aadb211139349529a5f39c5f4ea6b0e56f3d2c3a2e2`
 
-This is historical evidence only. It does not verify v0.3.0 or its schema-2 behavior.
+This is historical evidence only. It does not verify v0.3.x or its schema-2 behavior.
 
 ## Decisions intentionally deferred
 
@@ -292,5 +313,5 @@ Each is a separate product decision and, where relevant, requires a capability/p
 ## External release boundary
 
 Building or pushing the repository does not submit DecisionBook to the YourBot Marketplace. Treat
-Marketplace submission as a separate, explicit action after the final v0.3.0 artifact and public
+Marketplace submission as a separate, explicit action after the final v0.3.1 artifact and public
 release checks are complete.

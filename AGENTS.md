@@ -1,7 +1,7 @@
 # DecisionBook agent guidance
 
 Read [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) before changing this project. It is the durable
-handoff for product decisions, the v0.3.0 architecture, platform constraints, and release procedure.
+handoff for product decisions, the v0.3.x architecture, platform constraints, and release procedure.
 
 ## Product contract
 
@@ -18,6 +18,8 @@ decisions. Preserve these principles unless the user explicitly changes the prod
 - Keep runtime dependencies to `yourbot-sdk` plus the Python standard library.
 - Keep the declared capability set exactly `interaction:respond` and `storage:kv` unless the user
   explicitly approves an expansion after seeing its privacy and review implications.
+- Keep `capabilities_required` and the SDK 0.8.3 transition mirror `capabilities_requested`
+  present, ordered identically, and limited to that exact capability set.
 - `ctx.ephemeral.dedup` is permitted only as the decision-scoped, 15-second close-race guard. The
   SDK requires no capability for it; do not treat it as durable or expand its use silently.
 - Do not add HTTP, SQL, message-content listeners, schedules, Discord REST actions, proxy domains,
@@ -53,8 +55,8 @@ decisions. Preserve these principles unless the user explicitly changes the prod
 - `decisionbook.py` — `/decision` dispatch, add/close modals, view/list/close components, KV
   orchestration, repair metadata, metrics, and dashboard RPC handlers.
 - `__main__.py` — runtime entry point; `plugin.run()` must remain the final executable line.
-- `manifest.json` — v0.3.0 identity, exact two capabilities, and one root command with five
-  subcommands.
+- `manifest.json` — v0.3.1 identity, two identical capability fields for SDK deployment
+  compatibility, and one root command with five subcommands.
 - `dashboard_manifest.json` — manager-only read-only onboarding, health alert, exact stat cards, and
   paginated recent table.
 - `tests/` — unit, regression, SDK-contract, storage-integrity, manifest, dashboard, security, and
@@ -63,7 +65,7 @@ decisions. Preserve these principles unless the user explicitly changes the prod
 - `.github/workflows/ci.yml` — lint, security/dependency, 90% branch-coverage, SDK, audit, and
   artifact gates.
 - `brand/` — brand guide, source SVG, and 512 px PNG export; not included in the runtime ZIP.
-- `dist/decisionbook-0.3.0.zip` — manifest-derived marketplace artifact after a successful build.
+- `dist/decisionbook-0.3.1.zip` — manifest-derived marketplace artifact after a successful build.
 
 ## Required checks
 

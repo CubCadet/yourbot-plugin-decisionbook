@@ -83,7 +83,9 @@ stronger closure guarantees without a new platform primitive or a reviewed stora
 
 ## Capability boundary
 
-Only `interaction:respond` and `storage:kv` are declared. The source audit permits
+Only `interaction:respond` and `storage:kv` are declared. The exact list is mirrored across
+`capabilities_required` and the SDK 0.8.3 deployment-transition field `capabilities_requested`;
+the second field does not grant an additional permission. The source audit permits
 `ctx.ephemeral.dedup` only in the close handler with a decision-scoped key and 15-second TTL; no
 additional capability is required for that SDK surface.
 

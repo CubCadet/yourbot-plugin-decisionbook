@@ -1,6 +1,6 @@
 # DecisionBook architecture
 
-This document describes the v0.3.0 runtime and storage contracts. Historical v0.2 behavior belongs
+This document describes the v0.3.x runtime and storage contracts. Historical v0.2 behavior belongs
 in `CHANGELOG.md`; it must not be treated as the current implementation.
 
 ## Runtime flow
@@ -68,7 +68,7 @@ beneath an incompatible marker.
 
 Schema 1 did not record a channel identity, so the runtime cannot safely infer a schema-2 channel.
 An existing schema-1 ledger therefore needs an explicit, reviewed migration that assigns every
-record to a channel. v0.3.0 deliberately does not auto-migrate or silently reset that data.
+record to a channel. v0.3.x deliberately does not auto-migrate or silently reset that data.
 
 Before allocation, DecisionBook compares the stored counter with the decision-key count and the
 highest canonical padded key. When a capped `list()` cannot prove completeness, a radix inventory
@@ -181,18 +181,21 @@ title/choice/tag summary, recorded time, and closure time.
 
 ## Capability boundary
 
-The manifest declares exactly `interaction:respond` and `storage:kv`. Runtime source is constrained
-to interaction, KV, no-capability ephemeral dedup, logging, and metrics surfaces. It does not use
-HTTP, WebSockets, SQL, message content, schedules, Discord REST, filesystem persistence,
-subprocesses, dynamic imports, or elevated Discord permissions.
+The manifest declares exactly `interaction:respond` and `storage:kv`, mirrored identically across
+the canonical `capabilities_required` field and the SDK 0.8.3 transition field
+`capabilities_requested`. The mirror does not expand permissions. Runtime source is constrained to
+interaction, KV, no-capability ephemeral dedup, logging, and metrics surfaces. It does not use HTTP,
+WebSockets, SQL, message content, schedules, Discord REST, filesystem persistence, subprocesses,
+dynamic imports, or elevated Discord permissions.
 
 ## Release artifact and verification
 
-v0.3.0 is the first supported Marketplace/public release. Historical v0.2.0 was a development
-snapshot, not a supported upgrade source. Because schema 1 lacks channel identity, a schema-1 ledger
-cannot be directly upgraded by this runtime and requires a separately reviewed migration.
+v0.3.1 is the current deployment-compatibility patch; v0.3.0 remains the first supported
+Marketplace/public release. Historical v0.2.0 was a development snapshot, not a supported upgrade
+source. Because schema 1 lacks channel identity, a schema-1 ledger cannot be directly upgraded by
+this runtime and requires a separately reviewed migration.
 
-The canonical Marketplace bundle is `dist/decisionbook-0.3.0.zip`. Its nine-file allowlist is
+The canonical Marketplace bundle is `dist/decisionbook-0.3.1.zip`. Its nine-file allowlist is
 derived from `tools/build_bundle.py`; the builder fixes timestamps, ordering, compression, and
 permissions. `tools/validate_bundle.py` checks safe paths, entry types, archive limits, exact source
 parity, and deterministic metadata without extracting or executing the ZIP.
@@ -212,7 +215,7 @@ yourbot validate --path .
 yourbot doctor --path .
 python3 tools/run_audit.py
 python3 tools/validate_bundle.py
-sha256sum dist/decisionbook-0.3.0.zip
+sha256sum dist/decisionbook-0.3.1.zip
 ```
 
 The 15-gate audit compiles the tree, runs tests, validates manifest/capability/source/UI invariants,

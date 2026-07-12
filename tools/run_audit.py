@@ -340,15 +340,35 @@ def gate_manifest() -> None:
 
 
 def _validate_declared_capabilities(manifest: dict[str, Any]) -> None:
-    declared_value = manifest.get("capabilities_required")
-    if not isinstance(declared_value, list):
-        raise AuditError("capabilities_required must be a list")
-    declared = declared_value
-    require(len(declared) == len(set(declared)), "capabilities_required contains duplicates")
+    capability_fields: dict[str, list[str]] = {}
+    expected = sorted(EXPECTED_CAPS)
+    for field_name in ("capabilities_required", "capabilities_requested"):
+        declared_value = manifest.get(field_name)
+        if not isinstance(declared_value, list):
+            raise AuditError(f"{field_name} must be a list")
+        declared = [capability for capability in declared_value if isinstance(capability, str)]
+        require(
+            len(declared) == len(declared_value),
+            f"{field_name} must contain only strings",
+        )
+        require(
+            len(declared) == len(set(declared)),
+            f"{field_name} contains duplicates",
+        )
+        require(
+            declared == expected,
+            f"{field_name} must be exactly {expected}",
+        )
+        capability_fields[field_name] = declared
     require(
-        set(declared) == EXPECTED_CAPS,
-        f"capabilities must be exactly {sorted(EXPECTED_CAPS)}",
+        capability_fields["capabilities_required"] == capability_fields["capabilities_requested"],
+        "capabilities_required and capabilities_requested must match",
     )
+    for historical_alias in ("requested_capabilities", "capabilities"):
+        require(
+            historical_alias not in manifest,
+            f"historical capability alias {historical_alias} must not be present",
+        )
     require(
         "proxy_domains_requested" not in manifest,
         "DecisionBook must not request proxy domains",
